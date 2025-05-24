@@ -1,0 +1,4606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanish Escape Room - ¡Perdemos el vuelo!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .timer-container {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            display: inline-block;
+            margin: 0 auto;
+        }
+
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .timer.warning {
+            color: #e74c3c;
+        }
+
+        .timer.critical {
+            color: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .missions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .mission-door {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission-door.completed {
+            background: linear-gradient(145deg, #27ae60, #229954);
+        }
+
+        .mission-door::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .mission-door:hover::before {
+            left: 100%;
+        }
+
+        .mission-door:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            border-color: #ecf0f1;
+        }
+
+        .mission-door.locked {
+            background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+            cursor: not-allowed;
+        }
+
+        .mission-door.locked:hover {
+            transform: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .mission-door.shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .mission-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .mission-subtitle {
+            font-size: 0.9rem;
+            color: #ecf0f1;
+            margin-bottom: 15px;
+        }
+
+        .lock-icon {
+            font-size: 2rem;
+            margin-top: 10px;
+        }
+
+        .briefcase-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .briefcase-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .code-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .code-slot {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #bdc3c7;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            background: #ecf0f1;
+            transition: all 0.3s ease;
+        }
+
+        .code-slot.filled {
+            background: #27ae60;
+            color: white;
+            border-color: #27ae60;
+        }
+
+        .game-info {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .status-text {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .codes-collected {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .collected-code {
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* Mission Modal Styles */
+        .mission-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .mission-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .mission-content {
+            background: linear-gradient(135deg, #d63384 0%, #dc3545 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .close-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .mission-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .mission-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .mission-instructions {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .mission-ui {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .lives-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lives {
+            font-size: 1.5rem;
+        }
+
+        .question-counter {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .progress-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.completed {
+            background: #ffd700;
+            transform: scale(1.2);
+        }
+
+        .question-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .question-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .question-timer {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b35);
+            border-radius: 4px;
+            transition: width 0.1s linear;
+        }
+
+        .answer-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .answer-btn {
+            padding: 15px 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.9);
+            color: #2c3e50;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .answer-btn.correct {
+            background: #27ae60;
+            color: white;
+            animation: correctPulse 0.6s ease;
+        }
+
+        .answer-btn.incorrect {
+            background: #e74c3c;
+            color: white;
+            animation: incorrectShake 0.6s ease;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback-message {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feedback-message.show {
+            opacity: 1;
+        }
+
+        .code-reveal {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #ffd700, #ff6b35);
+            border-radius: 20px;
+            margin: 20px 0;
+            animation: codeRevealAnimation 1s ease;
+        }
+
+        @keyframes codeRevealAnimation {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .code-reveal h3 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .revealed-code {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            letter-spacing: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .return-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .return-btn:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        /* Mission 2 Styles */
+        .mission2-content {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .round-progress {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff6b35);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .spanish-clue {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .photo-item {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .photo-item.correct {
+            background: #27ae60;
+            color: white;
+            border-color: #2ecc71;
+            animation: correctGlow 0.6s ease;
+            pointer-events: none;
+        }
+
+        .photo-item.wrong {
+            animation: wrongFlash 0.6s ease;
+        }
+
+        .photo-item.shuffle {
+            animation: shuffleMove 0.8s ease;
+        }
+
+        @keyframes correctGlow {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(39, 174, 96, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); }
+        }
+
+        @keyframes wrongFlash {
+            0%, 100% { background: rgba(255,255,255,0.9); }
+            25%, 75% { background: #e74c3c; color: white; }
+            50% { background: rgba(255,255,255,0.9); }
+        }
+
+        @keyframes shuffleMove {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(-10px) translateY(-10px); }
+            50% { transform: translateX(10px) translateY(10px); }
+            75% { transform: translateX(-5px) translateY(5px); }
+        }
+
+        .photo-emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .photo-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .photo-item.correct .photo-label {
+            color: white;
+        }
+
+        .sequence-progress {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+
+        .sequence-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .sequence-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .sequence-indicator.completed {
+            background: #27ae60;
+            color: white;
+        }
+
+        .sequence-indicator.current {
+            background: #f39c12;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .mission-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .attempt-counter {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .hint-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .hint-btn:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .hint-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .round-complete {
+            text-align: center;
+            padding: 30px;
+            background: rgba(39, 174, 96, 0.2);
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #27ae60;
+        }
+
+        .round-complete h3 {
+            color: #27ae60;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .next-round-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .next-round-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Responsive for Mission 2 */
+        @media (max-width: 768px) {
+            .mission2-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .photo-grid {
+                gap: 10px;
+                max-width: 350px;
+            }
+
+            .photo-item {
+                padding: 15px;
+            }
+
+            .photo-emoji {
+                font-size: 2rem;
+            }
+
+            .photo-label {
+                font-size: 0.8rem;
+            }
+
+            .spanish-clue {
+                font-size: 1.1rem;
+                padding: 15px;
+            }
+
+            .mission-controls {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .photo-grid {
+                max-width: 280px;
+                gap: 8px;
+            }
+
+            .photo-item {
+                padding: 10px;
+            }
+
+            .photo-emoji {
+                font-size: 1.5rem;
+            }
+
+            .spanish-clue {
+                font-size: 1rem;
+            }
+
+            .sequence-indicators {
+                gap: 5px;
+            }
+
+            .sequence-indicator {
+                width: 25px;
+                height: 25px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .timer {
+                font-size: 2rem;
+            }
+
+            .missions-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .mission-door {
+                padding: 20px;
+            }
+
+            .code-slot {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .mission-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .mission-header h2 {
+                font-size: 2rem;
+            }
+
+            .mission-instructions {
+                font-size: 1rem;
+            }
+
+            .question-text {
+                font-size: 1.4rem;
+            }
+
+            .answer-btn {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+
+            .mission-ui {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.5rem;
+            }
+
+            .timer-container {
+                padding: 15px;
+            }
+
+            .timer {
+                font-size: 1.5rem;
+            }
+
+            .code-inputs {
+                gap: 10px;
+            }
+
+            .code-slot {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .mission-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .question-text {
+                font-size: 1.2rem;
+            }
+
+            .revealed-code {
+                font-size: 2rem;
+                letter-spacing: 3px;
+            }
+        }
+
+        /* Mission 3 Styles */
+        .mission3-content {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .sentence-progress {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .sentence-timer {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .sentence-timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+            border-radius: 6px;
+            transition: width 0.1s linear;
+        }
+
+        .construction-zone {
+            background: rgba(255,255,255,0.1);
+            border: 3px dashed rgba(255,255,255,0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            text-align: center;
+            min-height: 120px;
+        }
+
+        .sentence-template {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .word-slot {
+            min-width: 120px;
+            height: 50px;
+            border: 2px dashed rgba(255,255,255,0.5);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            background: rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .word-slot.filled {
+            background: rgba(39, 174, 96, 0.3);
+            border-color: #27ae60;
+            border-style: solid;
+        }
+
+        .word-slot.drag-over {
+            background: rgba(52, 152, 219, 0.4);
+            border-color: #3498db;
+            transform: scale(1.05);
+        }
+
+        .static-word {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            margin: 0 5px;
+        }
+
+        .word-bank {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .word-bank-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .word-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .word-tile {
+            background: linear-gradient(145deg, #f8c471, #e67e22);
+            color: #2c3e50;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            user-select: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .word-tile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .word-tile.dragging {
+            opacity: 0.7;
+            transform: rotate(5deg);
+            cursor: grabbing;
+        }
+
+        .word-tile.correct {
+            background: linear-gradient(145deg, #58d68d, #27ae60);
+            color: white;
+            pointer-events: none;
+        }
+
+        .word-tile.used {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .mission3-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .check-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .check-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hint-btn3 {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .hint-btn3:hover {
+            background: #8e44ad;
+            transform: translateY(-2px);
+        }
+
+        .hint-btn3:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sentence-feedback {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+            min-height: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .sentence-feedback.correct {
+            color: #27ae60;
+            animation: bounceIn 0.6s ease;
+        }
+
+        .sentence-feedback.incorrect {
+            color: #e74c3c;
+            animation: shake 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .code-reveal-progress {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .code-letters {
+            font-size: 2.5rem;
+            font-weight: bold;
+            letter-spacing: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .code-letter {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            line-height: 56px;
+            margin: 0 5px;
+            transition: all 0.5s ease;
+        }
+
+        .code-letter.revealed {
+            background: #27ae60;
+            border-color: #27ae60;
+            color: white;
+            animation: letterReveal 0.8s ease;
+        }
+
+        @keyframes letterReveal {
+            0% { transform: rotateY(180deg); }
+            100% { transform: rotateY(0deg); }
+        }
+
+        .english-hint {
+            background: rgba(155, 89, 182, 0.2);
+            border: 2px solid #9b59b6;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-style: italic;
+            display: none;
+        }
+
+        .english-hint.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .wrong-attempts {
+            text-align: center;
+            font-size: 1rem;
+            margin: 10px 0;
+            color: #f39c12;
+        }
+
+        /* Mobile Responsive for Mission 3 */
+        @media (max-width: 768px) {
+            .mission3-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .sentence-template {
+                font-size: 1.4rem;
+            }
+
+            .word-slot {
+                min-width: 80px;
+                height: 40px;
+                margin: 2px;
+            }
+
+            .static-word {
+                font-size: 1.4rem;
+            }
+
+            .word-tile {
+                padding: 8px 12px;
+                font-size: 1rem;
+            }
+
+            .construction-zone {
+                padding: 20px;
+                min-height: 100px;
+            }
+
+            .mission3-controls {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .code-letters {
+                font-size: 2rem;
+                letter-spacing: 5px;
+            }
+
+            .code-letter {
+                width: 45px;
+                height: 45px;
+                line-height: 41px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sentence-template {
+                font-size: 1.2rem;
+            }
+
+            .word-slot {
+                min-width: 60px;
+                height: 35px;
+            }
+
+            .static-word {
+                font-size: 1.2rem;
+            }
+
+            .word-tile {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+
+            .code-letters {
+                font-size: 1.5rem;
+                letter-spacing: 3px;
+            }
+
+            .code-letter {
+                width: 35px;
+                height: 35px;
+                line-height: 31px;
+                margin: 0 2px;
+            }
+        }
+
+        /* Mission 4 Styles */
+        .mission4-content {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .round-display {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .airplane-progress {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            font-size: 2rem;
+        }
+
+        .airplane {
+            opacity: 0.3;
+            transition: all 0.5s ease;
+        }
+
+        .airplane.earned {
+            opacity: 1;
+            animation: airplaneEarn 0.8s ease;
+        }
+
+        @keyframes airplaneEarn {
+            0% { transform: scale(0) rotate(-180deg); }
+            50% { transform: scale(1.2) rotate(0deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .memory-phase {
+            text-align: center;
+            margin: 30px 0;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .phrase-display {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 30px 0;
+            padding: 30px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            transition: all 0.5s ease;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .phrase-display.fade-out {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        .memory-instructions {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            color: #ecf0f1;
+        }
+
+        .start-round-btn, .ready-btn, .peek-btn4 {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .start-round-btn:hover, .ready-btn:hover, .peek-btn4:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .ready-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .peek-btn4 {
+            background: #f39c12;
+        }
+
+        .peek-btn4:hover {
+            background: #e67e22;
+        }
+
+        .peek-btn4:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .recreation-phase {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .recreation-phase.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .sentence-builder {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            min-height: 120px;
+        }
+
+        .built-sentence {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border: 2px dashed rgba(255,255,255,0.3);
+        }
+
+        .selected-word {
+            background: #27ae60;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin: 2px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .selected-word:hover {
+            background: #e74c3c;
+            transform: scale(1.05);
+        }
+
+        .memory-word-bank {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .memory-word-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .memory-word-tile {
+            background: linear-gradient(145deg, #a569bd, #9b59b6);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            user-select: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .memory-word-tile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            background: linear-gradient(145deg, #bb8fce, #a569bd);
+        }
+
+        .memory-word-tile.used {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .mission4-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .check4-btn, .reset4-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset4-btn {
+            background: #e67e22;
+        }
+
+        .check4-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .reset4-btn:hover {
+            background: #d35400;
+            transform: translateY(-2px);
+        }
+
+        .check4-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .attempt-info {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1rem;
+            color: #f39c12;
+        }
+
+        .round-feedback {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .round-feedback.correct {
+            color: #27ae60;
+            animation: bounceIn 0.6s ease;
+        }
+
+        .round-feedback.incorrect {
+            color: #e74c3c;
+            animation: shake 0.6s ease;
+        }
+
+        .round-complete {
+            text-align: center;
+            padding: 30px;
+            background: rgba(39, 174, 96, 0.2);
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #27ae60;
+            display: none;
+        }
+
+        .round-complete.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .round-complete h3 {
+            color: #27ae60;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .next-round4-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .next-round4-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Responsive for Mission 4 */
+        @media (max-width: 768px) {
+            .mission4-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .phrase-display {
+                font-size: 1.6rem;
+                padding: 20px;
+            }
+
+            .built-sentence {
+                font-size: 1.3rem;
+            }
+
+            .memory-word-tile {
+                padding: 8px 12px;
+                font-size: 1rem;
+            }
+
+            .selected-word {
+                padding: 6px 10px;
+                font-size: 1rem;
+            }
+
+            .mission4-controls {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .airplane-progress {
+                gap: 10px;
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .phrase-display {
+                font-size: 1.3rem;
+                padding: 15px;
+            }
+
+            .built-sentence {
+                font-size: 1.1rem;
+            }
+
+            .memory-word-tile {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+
+            .selected-word {
+                padding: 4px 8px;
+                font-size: 0.9rem;
+            }
+
+            .airplane-progress {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Mobile Responsive for Mission 3 */
+        @media (max-width: 768px) {
+            .mission3-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .sentence-template {
+                font-size: 1.4rem;
+            }
+
+            .word-slot {
+                min-width: 80px;
+                height: 40px;
+                margin: 2px;
+            }
+
+            .static-word {
+                font-size: 1.4rem;
+            }
+
+            .word-tile {
+                padding: 8px 12px;
+                font-size: 1rem;
+            }
+
+            .construction-zone {
+                padding: 20px;
+                min-height: 100px;
+            }
+
+            .mission3-controls {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .code-letters {
+                font-size: 2rem;
+                letter-spacing: 5px;
+            }
+
+            .code-letter {
+                width: 45px;
+                height: 45px;
+                line-height: 41px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sentence-template {
+                font-size: 1.2rem;
+            }
+
+            .word-slot {
+                min-width: 60px;
+                height: 35px;
+            }
+
+            .static-word {
+                font-size: 1.2rem;
+            }
+
+            .word-tile {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+
+            .code-letters {
+                font-size: 1.5rem;
+                letter-spacing: 3px;
+            }
+
+            .code-letter {
+                width: 35px;
+                height: 35px;
+                line-height: 31px;
+                margin: 0 2px;
+            }
+        }
+
+        /* Final Escape Sequence Styles */
+        .briefcase-container.all-complete {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            animation: briefcaseGlow 2s ease-in-out infinite;
+            cursor: pointer;
+            transform: scale(1.05);
+        }
+
+        @keyframes briefcaseGlow {
+            0%, 100% { box-shadow: 0 10px 40px rgba(243, 156, 18, 0.3); }
+            50% { box-shadow: 0 15px 50px rgba(243, 156, 18, 0.6); }
+        }
+
+        .final-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            z-index: 2000;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .final-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .final-content {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            color: white;
+            text-align: center;
+        }
+
+        .code-entry-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .code-entry-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #ecf0f1;
+        }
+
+        .collected-codes-hint {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+
+        .code-inputs-final {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .code-input-group {
+            text-align: center;
+        }
+
+        .code-input-label {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #f39c12;
+        }
+
+        .code-input-field {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+            border: 3px solid #bdc3c7;
+            border-radius: 10px;
+            background: white;
+            color: #2c3e50;
+            text-transform: uppercase;
+        }
+
+        .code-input-field:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .code-input-field.correct {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+
+        .code-input-field.incorrect {
+            border-color: #e74c3c;
+            background: #f8d7da;
+            animation: inputShake 0.5s ease;
+        }
+
+        @keyframes inputShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .unlock-btn {
+            background: linear-gradient(145deg, #27ae60, #229954);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .unlock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .unlock-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .final-feedback {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+
+        .final-feedback.error {
+            color: #e74c3c;
+            animation: shake 0.6s ease;
+        }
+
+        /* Success Screen Styles */
+        .success-content {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            text-align: center;
+        }
+
+        .success-title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: bounce 1s ease infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-10px); }
+        }
+
+        .time-saved {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .boarding-pass {
+            background: white;
+            color: #2c3e50;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .boarding-pass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: #bdc3c7;
+            border-left: 2px dashed #95a5a6;
+        }
+
+        .boarding-pass-header {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+
+        .boarding-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .boarding-field {
+            text-align: left;
+        }
+
+        .boarding-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .boarding-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .student-name-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .play-again-btn {
+            background: #f39c12;
+            color: white;
+        }
+
+        .leaderboard-btn {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Game Over Screen */
+        .gameover-content {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            text-align: center;
+        }
+
+        .gameover-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .mission-summary {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .collected-codes-display {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .code-badge {
+            background: #27ae60;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .code-badge.missing {
+            background: #95a5a6;
+        }
+
+        /* Confetti Animation */
+        .confetti {
+            position: fixed;
+            top: -10px;
+            z-index: 3000;
+            pointer-events: none;
+        }
+
+        .confetti-piece {
+            width: 10px;
+            height: 10px;
+            background: #f39c12;
+            position: absolute;
+            animation: confettiDrop 3s linear infinite;
+        }
+
+        @keyframes confettiDrop {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-content {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .leaderboard-table th {
+            background: rgba(0,0,0,0.2);
+            font-weight: bold;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: #f39c12;
+        }
+
+        /* Mobile Responsive for Final Sequence */
+        @media (max-width: 768px) {
+            .final-content {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .code-entry-title {
+                font-size: 2rem;
+            }
+
+            .code-inputs-final {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .boarding-info {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .action-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .timer {
+                font-size: 2rem;
+            }
+
+            .missions-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .mission-door {
+                padding: 20px;
+            }
+
+            .code-slot {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .mission-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .mission-header h2 {
+                font-size: 2rem;
+            }
+
+            .mission-instructions {
+                font-size: 1rem;
+            }
+
+            .question-text {
+                font-size: 1.4rem;
+            }
+
+            .answer-btn {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+
+            .mission-ui {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.5rem;
+            }
+
+            .timer-container {
+                padding: 15px;
+            }
+
+            .timer {
+                font-size: 1.5rem;
+            }
+
+            .code-inputs {
+                gap: 10px;
+            }
+
+            .code-slot {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .mission-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .question-text {
+                font-size: 1.2rem;
+            }
+
+            .revealed-code {
+                font-size: 2rem;
+                letter-spacing: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">✈️ Spanish Escape Room - ¡Perdemos el vuelo!</h1>
+            <div class="timer-container">
+                <div class="timer" id="timer">Time to Flight: 30:00</div>
+            </div>
+        </header>
+
+        <main>
+            <div class="missions-grid">
+                <div class="mission-door" id="mission1" data-mission="1">
+                    <div class="mission-title">Mission 1</div>
+                    <div class="mission-subtitle">Vocabulario Rápido</div>
+                    <div class="lock-icon">🔓</div>
+                </div>
+
+                <div class="mission-door locked" id="mission2" data-mission="2">
+                    <div class="mission-title">Mission 2</div>
+                    <div class="mission-subtitle">Fotos Secretas</div>
+                    <div class="lock-icon">🔒</div>
+                </div>
+
+                <div class="mission-door locked" id="mission3" data-mission="3">
+                    <div class="mission-title">Mission 3</div>
+                    <div class="mission-subtitle">Construye Frases</div>
+                    <div class="lock-icon">🔒</div>
+                </div>
+
+                <div class="mission-door locked" id="mission4" data-mission="4">
+                    <div class="mission-title">Mission 4</div>
+                    <div class="mission-subtitle">Memoria Final</div>
+                    <div class="lock-icon">🔒</div>
+                </div>
+            </div>
+
+            <div class="briefcase-container">
+                <h2 class="briefcase-title">💼 Código del Equipaje</h2>
+                <div class="code-inputs">
+                    <div class="code-slot" id="code1">____</div>
+                    <div class="code-slot" id="code2">____</div>
+                    <div class="code-slot" id="code3">____</div>
+                    <div class="code-slot" id="code4">____</div>
+                </div>
+            </div>
+
+            <div class="game-info">
+                <div class="status-text">Códigos Recolectados:</div>
+                <div class="codes-collected" id="codesCollected">
+                    <span style="color: #7f8c8d; font-style: italic;">Ningún código encontrado aún...</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mission 1 Modal -->
+    <div class="mission-modal" id="mission1Modal">
+        <div class="mission-content">
+            <button class="close-btn" id="closeMission1">×</button>
+            
+            <div class="mission-header">
+                <h2>🏃‍♀️ Mission 1: Vocabulario Rápido</h2>
+                <p class="mission-instructions">
+                    Answer 10 questions correctly to get the first code! Be careful - 3 mistakes and you start over!
+                </p>
+            </div>
+
+            <div class="mission-ui">
+                <div class="lives-container">
+                    <span>Lives:</span>
+                    <div class="lives" id="livesDisplay">❤️❤️❤️</div>
+                </div>
+                <div class="question-counter" id="questionCounter">Question 1/10</div>
+                <div class="progress-dots" id="progressDots">
+                    <!-- Progress dots will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="question-container" id="questionContainer">
+                <div class="question-timer">
+                    <div class="timer-bar" id="questionTimerBar"></div>
+                </div>
+                <div class="question-text" id="questionText">Loading question...</div>
+                <div class="answer-buttons" id="answerButtons">
+                    <!-- Answer buttons will be generated by JavaScript -->
+                </div>
+                <div class="feedback-message" id="feedbackMessage"></div>
+            </div>
+
+            <div class="code-reveal" id="codeReveal" style="display: none;">
+                <h3>🎉 ¡Misión Completa!</h3>
+                <p>Your code is:</p>
+                <div class="revealed-code">VOLAR</div>
+                <button class="return-btn" id="returnToMain">Return to Main Screen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mission 2 Modal -->
+    <div class="mission-modal" id="mission2Modal">
+        <div class="mission2-content">
+            <button class="close-btn" id="closeMission2">×</button>
+            
+            <div class="mission-header">
+                <h2>📸 Mission 2: Fotos Secretas</h2>
+                <p class="mission-instructions">
+                    Click the photos in the correct order based on the Spanish clues! Get it wrong and they shuffle!
+                </p>
+            </div>
+
+            <div class="round-progress">
+                <div>Round <span id="currentRound">1</span>/3</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="roundProgressFill" style="width: 33.33%;"></div>
+                </div>
+            </div>
+
+            <div class="spanish-clue" id="spanishClue">
+                Primero voy a nadar, luego voy a comer, y finalmente voy a dormir
+            </div>
+
+            <div class="sequence-progress">
+                <div>Sequence Progress:</div>
+                <div class="sequence-indicators" id="sequenceIndicators">
+                    <!-- Sequence indicators will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="photo-grid" id="photoGrid">
+                <!-- Photo items will be generated by JavaScript -->
+            </div>
+
+            <div class="mission-controls">
+                <div class="attempt-counter">
+                    Attempts: <span id="attemptCount">0</span>
+                </div>
+                <button class="hint-btn" id="hintBtn">💡 Hint (-2 min)</button>
+            </div>
+
+            <div class="round-complete" id="roundComplete" style="display: none;">
+                <h3>🎉 Round Complete!</h3>
+                <p>Great job! Ready for the next challenge?</p>
+                <button class="next-round-btn" id="nextRoundBtn">Next Round</button>
+            </div>
+
+            <div class="code-reveal" id="mission2CodeReveal" style="display: none;">
+                <h3>🎉 ¡Código Descifrado!</h3>
+                <p>Your code is:</p>
+                <div class="revealed-code">2024</div>
+                <p>Total attempts: <span id="totalAttempts">0</span></p>
+                <button class="return-btn" id="returnToMain2">Return to Main Screen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mission 3 Modal -->
+    <div class="mission-modal" id="mission3Modal">
+        <div class="mission3-content">
+            <button class="close-btn" id="closeMission3">×</button>
+            
+            <div class="mission-header">
+                <h2>🔨 Mission 3: Construye Frases</h2>
+                <p class="mission-instructions">
+                    Build correct Spanish sentences using 'Voy a...' by dragging words in the right order! Complete 5 sentences before time runs out!
+                </p>
+            </div>
+
+            <div class="sentence-progress">
+                <div>Sentence <span id="currentSentence">1</span>/5</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sentenceProgressFill" style="width: 20%;"></div>
+                </div>
+            </div>
+
+            <div class="construction-zone">
+                <div class="sentence-template" id="sentenceTemplate">
+                    <!-- Sentence will be built here -->
+                </div>
+                <div class="sentence-feedback" id="sentenceFeedback"></div>
+            </div>
+
+            <div class="word-bank">
+                <div class="word-bank-title">Word Bank - Drag words above:</div>
+                <div class="word-tiles" id="wordTiles">
+                    <!-- Word tiles will be generated here -->
+                </div>
+            </div>
+
+            <div class="mission3-controls">
+                <button class="check-btn" id="checkSentenceBtn">✓ Check Sentence</button>
+                <div class="wrong-attempts">
+                    Wrong attempts: <span id="wrongAttempts">0</span>/2
+                </div>
+                <button class="hint-btn3" id="hintBtn3">💡 Translation</button>
+            </div>
+
+            <div class="english-hint" id="englishHint">
+                <!-- English translation will appear here -->
+            </div>
+
+            <div class="code-reveal-progress">
+                <div>Code Progress:</div>
+                <div class="code-letters">
+                    <span class="code-letter" id="codeLetter1">_</span>
+                    <span class="code-letter" id="codeLetter2">_</span>
+                    <span class="code-letter" id="codeLetter3">_</span>
+                </div>
+            </div>
+
+            <div class="code-reveal" id="mission3CodeReveal" style="display: none;">
+                <h3>🎉 ¡Construcción Completa!</h3>
+                <p>Your code is:</p>
+                <div class="revealed-code">BCN</div>
+                <p>BCN = Barcelona Airport Code!</p>
+                <button class="return-btn" id="returnToMain3">Return to Main Screen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mission 4 Modal -->
+    <div class="mission-modal" id="mission4Modal">
+        <div class="mission4-content">
+            <button class="close-btn" id="closeMission4">×</button>
+            
+            <div class="mission-header">
+                <h2>🧠 Mission 4: Memoria Final</h2>
+                <p class="mission-instructions">
+                    Memorize Spanish phrases and recreate them! The phrases get longer each round. Take your time to focus!
+                </p>
+            </div>
+
+            <div class="round-display">
+                Round <span id="currentRound4">1</span>/3
+            </div>
+
+            <div class="airplane-progress">
+                <div class="airplane" id="airplane1">✈️</div>
+                <div class="airplane" id="airplane2">✈️</div>
+                <div class="airplane" id="airplane3">✈️</div>
+            </div>
+
+            <div class="memory-phase" id="memoryPhase">
+                <div class="memory-instructions" id="memoryInstructions">
+                    Click "Start Round" to begin memorizing the phrase!
+                </div>
+                <div class="phrase-display" id="phraseDisplay">
+                    <!-- Phrase will be displayed here -->
+                </div>
+                <div class="mission4-controls">
+                    <button class="start-round-btn" id="startRoundBtn4">Start Round</button>
+                    <button class="ready-btn" id="readyBtn4" style="display: none;" disabled>I'm ready!</button>
+                </div>
+            </div>
+
+            <div class="recreation-phase" id="recreationPhase">
+                <div class="memory-instructions">
+                    Now recreate the sentence!
+                </div>
+                
+                <div class="sentence-builder">
+                    <div class="built-sentence" id="builtSentence">
+                        Click words below to build the sentence...
+                    </div>
+                </div>
+
+                <div class="memory-word-bank">
+                    <div class="memory-word-tiles" id="memoryWordTiles">
+                        <!-- Word tiles will be generated here -->
+                    </div>
+                </div>
+
+                <div class="mission4-controls">
+                    <button class="check4-btn" id="check4Btn" disabled>✓ Check</button>
+                    <button class="reset4-btn" id="reset4Btn">🔄 Reset</button>
+                    <button class="peek-btn4" id="peekBtn4">👁️ Peek (+1 attempt)</button>
+                </div>
+
+                <div class="attempt-info">
+                    Attempts this round: <span id="roundAttempts">0</span>/3
+                </div>
+
+                <div class="round-feedback" id="roundFeedback"></div>
+            </div>
+
+            <div class="round-complete" id="roundComplete4">
+                <h3>🎉 Round Complete!</h3>
+                <p>Excellent memory! Ready for the next challenge?</p>
+                <button class="next-round4-btn" id="nextRound4Btn">Next Round</button>
+            </div>
+
+            <div class="code-reveal" id="mission4CodeReveal" style="display: none;">
+                <h3>🎉 ¡Memoria Perfecta!</h3>
+                <p>Your final code is:</p>
+                <div class="revealed-code">✈️</div>
+                <p>Quick! Enter all codes to catch your flight!</p>
+                <button class="return-btn" id="returnToMain4">Return to Main Screen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Code Entry Modal -->
+    <div class="final-modal" id="finalCodeModal">
+        <div class="final-content">
+            <button class="close-btn" id="closeFinalModal">×</button>
+            
+            <h1 class="code-entry-title">🎯 Enter the Escape Codes!</h1>
+            <p class="code-entry-subtitle">Enter all 4 codes in the correct order to catch your flight!</p>
+            
+            <div class="collected-codes-hint">
+                Your codes: <span id="finalCodesHint">VOLAR, 2024, BCN, ✈️</span>
+            </div>
+
+            <div class="code-inputs-final">
+                <div class="code-input-group">
+                    <div class="code-input-label">Mission 1:</div>
+                    <input type="text" class="code-input-field" id="finalCode1" placeholder="____" maxlength="10">
+                </div>
+                <div class="code-input-group">
+                    <div class="code-input-label">Mission 2:</div>
+                    <input type="text" class="code-input-field" id="finalCode2" placeholder="____" maxlength="10">
+                </div>
+                <div class="code-input-group">
+                    <div class="code-input-label">Mission 3:</div>
+                    <input type="text" class="code-input-field" id="finalCode3" placeholder="____" maxlength="10">
+                </div>
+                <div class="code-input-group">
+                    <div class="code-input-label">Mission 4:</div>
+                    <input type="text" class="code-input-field" id="finalCode4" placeholder="✈️" maxlength="10">
+                    <div style="margin-top: 5px; font-size: 0.9rem; color: #bdc3c7;">Type the airplane emoji or ✈️</div>
+                </div>
+            </div>
+
+            <button class="unlock-btn" id="unlockBtn" disabled>🔓 UNLOCK</button>
+            
+            <div class="final-feedback" id="finalFeedback"></div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="final-modal" id="successModal">
+        <div class="final-content success-content">
+            <h1 class="success-title">🎉 ¡FELICIDADES! 🎉</h1>
+            <div class="time-saved" id="timeSaved">
+                You made it to your flight with <span id="timeRemaining">15:30</span> to spare!
+            </div>
+
+            <div class="boarding-pass">
+                <div class="boarding-pass-header">✈️ BOARDING PASS ✈️</div>
+                <div class="boarding-info">
+                    <div class="boarding-field">
+                        <div class="boarding-label">Student Name</div>
+                        <input type="text" class="student-name-input" id="studentNameInput" placeholder="Enter your name">
+                    </div>
+                    <div class="boarding-field">
+                        <div class="boarding-label">Flight</div>
+                        <div class="boarding-value">BCN → DXB</div>
+                    </div>
+                    <div class="boarding-field">
+                        <div class="boarding-label">Time Saved</div>
+                        <div class="boarding-value" id="boardingTimeSaved">15:30</div>
+                    </div>
+                    <div class="boarding-field">
+                        <div class="boarding-label">Date</div>
+                        <div class="boarding-value" id="boardingDate">Today</div>
+                    </div>
+                    <div class="boarding-field">
+                        <div class="boarding-label">Codes Found</div>
+                        <div class="boarding-value">VOLAR • 2024 • BCN • ✈️</div>
+                    </div>
+                    <div class="boarding-field">
+                        <div class="boarding-label">Status</div>
+                        <div class="boarding-value" style="color: #27ae60;">✅ ESCAPED</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn download-btn" id="downloadCertBtn">📄 Download Certificate</button>
+                <button class="action-btn leaderboard-btn" id="saveScoreBtn">🏆 Save Score</button>
+                <button class="action-btn play-again-btn" id="playAgainBtn">🔄 Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="final-modal" id="gameOverModal">
+        <div class="final-content gameover-content">
+            <h1 class="gameover-title">😢 ¡Oh no! You missed your flight!</h1>
+            
+            <div class="mission-summary">
+                <h3>Mission Progress</h3>
+                <p>You completed <span id="completedMissions">0</span> out of 4 missions</p>
+                
+                <div class="collected-codes-display" id="gameOverCodes">
+                    <!-- Codes will be displayed here -->
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn play-again-btn" id="tryAgainBtn">🔄 Try Again</button>
+                <button class="action-btn leaderboard-btn" id="viewLeaderboardBtn">🏆 View Leaderboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="final-modal" id="leaderboardModal">
+        <div class="final-content leaderboard-content">
+            <button class="close-btn" id="closeLeaderboard">×</button>
+            
+            <h1 class="code-entry-title">🏆 Leaderboard</h1>
+            <p class="code-entry-subtitle">Top 10 Fastest Escape Times</p>
+
+            <table class="leaderboard-table" id="leaderboardTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Time Remaining</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <!-- Leaderboard entries will be generated here -->
+                </tbody>
+            </table>
+
+            <div class="action-buttons">
+                <button class="action-btn play-again-btn" id="playAgainFromLeaderboard">🔄 Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State Object
+        const gameState = {
+            timeRemaining: 30 * 60, // 30 minutes in seconds
+            collectedCodes: [],
+            missionStatus: {
+                1: 'unlocked',
+                2: 'locked',
+                3: 'locked',
+                4: 'locked'
+            }
+        };
+
+        // Mission 1 Data
+        const mission1Data = {
+            vocabulary: [
+                { spanish: 'nadar', english: 'to swim' },
+                { spanish: 'comer', english: 'to eat' },
+                { spanish: 'dormir', english: 'to sleep' },
+                { spanish: 'visitar', english: 'to visit' },
+                { spanish: 'jugar', english: 'to play' },
+                { spanish: 'descansar', english: 'to rest' },
+                { spanish: 'volar', english: 'to fly' },
+                { spanish: 'correr', english: 'to run' },
+                { spanish: 'leer', english: 'to read' },
+                { spanish: 'escribir', english: 'to write' }
+            ],
+            wrongAnswers: [
+                'to dance', 'to sing', 'to walk', 'to drive', 'to work', 'to study',
+                'to cook', 'to watch', 'to listen', 'to speak', 'to buy', 'to sell',
+                'to open', 'to close', 'to think', 'to laugh', 'to cry', 'to help'
+            ]
+        };
+
+        // Mission 1 State
+        let mission1State = {
+            currentQuestion: 0,
+            lives: 3,
+            questions: [],
+            questionTimer: null,
+            timeLeft: 10
+        };
+
+        // Timer functionality
+        function updateTimer() {
+            const minutes = Math.floor(gameState.timeRemaining / 60);
+            const seconds = gameState.timeRemaining % 60;
+            const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = `Time to Flight: ${formattedTime}`;
+            
+            // Color changes based on time remaining
+            timerElement.classList.remove('warning', 'critical');
+            if (gameState.timeRemaining <= 120) { // 2 minutes
+                timerElement.classList.add('critical');
+            } else if (gameState.timeRemaining <= 300) { // 5 minutes
+                timerElement.classList.add('warning');
+            }
+            
+            if (gameState.timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                timerElement.textContent = 'Time to Flight: 00:00';
+                showGameOver();
+                return;
+            }
+            
+            gameState.timeRemaining--;
+        }
+
+        // Start timer immediately
+        const timerInterval = setInterval(updateTimer, 1000);
+
+        // Mission door click handlers
+        document.querySelectorAll('.mission-door').forEach(door => {
+            door.addEventListener('click', function() {
+                const missionNumber = this.dataset.mission;
+                const isLocked = this.classList.contains('locked');
+                
+                console.log(`Clicked Mission ${missionNumber}`);
+                console.log(`Mission Status: ${gameState.missionStatus[missionNumber]}`);
+                console.log(`Current Game State:`, gameState);
+                
+                if (isLocked) {
+                    // Shake animation for locked doors
+                    this.classList.add('shake');
+                    setTimeout(() => {
+                        this.classList.remove('shake');
+                    }, 500);
+                    
+                    console.log(`Mission ${missionNumber} is locked!`);
+                } else {
+                    console.log(`Opening Mission ${missionNumber}...`);
+                    if (missionNumber === '1') {
+                        startMission1();
+                    } else if (missionNumber === '2') {
+                        startMission2();
+                    } else if (missionNumber === '3') {
+                        startMission3();
+                    } else if (missionNumber === '4') {
+                        startMission4();
+                    }
+                    // Here you would implement other mission logic
+                }
+            });
+        });
+
+        // Mission 1 Functions
+        function startMission1() {
+            // Reset mission state
+            mission1State = {
+                currentQuestion: 0,
+                lives: 3,
+                questions: generateQuestions(),
+                questionTimer: null,
+                timeLeft: 10
+            };
+            
+            // Show modal
+            document.getElementById('mission1Modal').classList.add('active');
+            
+            // Initialize UI
+            updateLivesDisplay();
+            updateProgressDots();
+            showQuestion();
+        }
+
+        function generateQuestions() {
+            // Shuffle vocabulary and take all 10
+            const shuffled = [...mission1Data.vocabulary].sort(() => Math.random() - 0.5);
+            return shuffled.map(vocab => {
+                // Get 2 random wrong answers
+                const wrongAnswers = mission1Data.wrongAnswers
+                    .filter(answer => answer !== vocab.english)
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 2);
+                
+                // Combine correct and wrong answers, then shuffle
+                const allAnswers = [vocab.english, ...wrongAnswers]
+                    .sort(() => Math.random() - 0.5);
+                
+                return {
+                    question: `What does '${vocab.spanish}' mean?`,
+                    answers: allAnswers,
+                    correct: vocab.english
+                };
+            });
+        }
+
+        function showQuestion() {
+            const question = mission1State.questions[mission1State.currentQuestion];
+            
+            // Update question counter
+            document.getElementById('questionCounter').textContent = 
+                `Question ${mission1State.currentQuestion + 1}/10`;
+            
+            // Update question text
+            document.getElementById('questionText').textContent = question.question;
+            
+            // Create answer buttons
+            const answersContainer = document.getElementById('answerButtons');
+            answersContainer.innerHTML = '';
+            
+            question.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.textContent = answer;
+                button.addEventListener('click', () => selectAnswer(answer, question.correct));
+                answersContainer.appendChild(button);
+            });
+            
+            // Start question timer
+            startQuestionTimer();
+            
+            // Hide feedback message
+            document.getElementById('feedbackMessage').classList.remove('show');
+        }
+
+        function startQuestionTimer() {
+            mission1State.timeLeft = 10;
+            const timerBar = document.getElementById('questionTimerBar');
+            
+            mission1State.questionTimer = setInterval(() => {
+                mission1State.timeLeft--;
+                const percentage = (mission1State.timeLeft / 10) * 100;
+                timerBar.style.width = percentage + '%';
+                
+                if (mission1State.timeLeft <= 0) {
+                    clearInterval(mission1State.questionTimer);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function selectAnswer(selectedAnswer, correctAnswer) {
+            clearInterval(mission1State.questionTimer);
+            
+            const buttons = document.querySelectorAll('.answer-btn');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            
+            // Disable all buttons
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (selectedAnswer === correctAnswer) {
+                // Correct answer
+                buttons.forEach(btn => {
+                    if (btn.textContent === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+                
+                feedbackMessage.textContent = '¡Correcto!';
+                feedbackMessage.style.color = '#27ae60';
+                feedbackMessage.classList.add('show');
+                
+                // Update progress
+                updateProgressDots();
+                
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1500);
+                
+            } else {
+                // Wrong answer
+                buttons.forEach(btn => {
+                    if (btn.textContent === selectedAnswer) {
+                        btn.classList.add('incorrect');
+                    } else if (btn.textContent === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+                
+                feedbackMessage.textContent = '¡Incorrecto!';
+                feedbackMessage.style.color = '#e74c3c';
+                feedbackMessage.classList.add('show');
+                
+                // Lose a life
+                mission1State.lives--;
+                updateLivesDisplay();
+                
+                setTimeout(() => {
+                    if (mission1State.lives <= 0) {
+                        restartMission();
+                    } else {
+                        nextQuestion();
+                    }
+                }, 1500);
+            }
+        }
+
+        function handleTimeout() {
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const buttons = document.querySelectorAll('.answer-btn');
+            
+            // Disable all buttons
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Show correct answer
+            const question = mission1State.questions[mission1State.currentQuestion];
+            buttons.forEach(btn => {
+                if (btn.textContent === question.correct) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            feedbackMessage.textContent = '¡Tiempo agotado!';
+            feedbackMessage.style.color = '#e74c3c';
+            feedbackMessage.classList.add('show');
+            
+            // Lose a life
+            mission1State.lives--;
+            updateLivesDisplay();
+            
+            setTimeout(() => {
+                if (mission1State.lives <= 0) {
+                    restartMission();
+                } else {
+                    nextQuestion();
+                }
+            }, 1500);
+        }
+
+        function nextQuestion() {
+            mission1State.currentQuestion++;
+            
+            if (mission1State.currentQuestion >= 10) {
+                // Mission complete!
+                completeMission1();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function updateLivesDisplay() {
+            const hearts = '❤️'.repeat(mission1State.lives) + '🖤'.repeat(3 - mission1State.lives);
+            document.getElementById('livesDisplay').textContent = hearts;
+        }
+
+        function updateProgressDots() {
+            const dotsContainer = document.getElementById('progressDots');
+            dotsContainer.innerHTML = '';
+            
+            for (let i = 0; i < 10; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (i < mission1State.currentQuestion) {
+                    dot.classList.add('completed');
+                }
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function restartMission() {
+            alert('¡Se acabaron las vidas! Starting over...');
+            startMission1();
+        }
+
+        function completeMission1() {
+            // Hide question container
+            document.getElementById('questionContainer').style.display = 'none';
+            
+            // Show code reveal
+            document.getElementById('codeReveal').style.display = 'block';
+            
+            // Add code to game state
+            addCollectedCode('VOLAR');
+            
+            // Mark mission as completed
+            gameState.missionStatus[1] = 'completed';
+            document.getElementById('mission1').classList.add('completed');
+            document.getElementById('mission1').querySelector('.lock-icon').textContent = '✅';
+            
+            // Unlock Mission 2
+            unlockMission(2);
+        }
+
+        // Close mission modal
+        document.getElementById('closeMission1').addEventListener('click', function() {
+            if (mission1State.currentQuestion > 0 && mission1State.currentQuestion < 10) {
+                if (confirm('¿Estás seguro? Perderás tu progreso actual.')) {
+                    closeMission1();
+                }
+            } else {
+                closeMission1();
+            }
+        });
+
+        document.getElementById('returnToMain').addEventListener('click', function() {
+            closeMission1();
+        });
+
+        function closeMission1() {
+            clearInterval(mission1State.questionTimer);
+            document.getElementById('mission1Modal').classList.remove('active');
+            
+            // Reset UI for next time
+            document.getElementById('questionContainer').style.display = 'block';
+            document.getElementById('codeReveal').style.display = 'none';
+        }
+
+        // Function to unlock a mission
+        function unlockMission(missionNumber) {
+            const missionElement = document.getElementById(`mission${missionNumber}`);
+            if (missionElement) {
+                missionElement.classList.remove('locked');
+                missionElement.querySelector('.lock-icon').textContent = '🔓';
+                gameState.missionStatus[missionNumber] = 'unlocked';
+                console.log(`Mission ${missionNumber} unlocked!`);
+            }
+        }
+
+        // Function to add a collected code
+        function addCollectedCode(code) {
+            if (!gameState.collectedCodes.includes(code)) {
+                gameState.collectedCodes.push(code);
+                updateCodeDisplay();
+                updateBriefcaseDisplay();
+                console.log(`Code collected: ${code}`);
+                console.log(`All collected codes:`, gameState.collectedCodes);
+                
+                // Check if all missions are complete
+                if (gameState.collectedCodes.length === 4) {
+                    activateBriefcase();
+                }
+            }
+        }
+
+        // Update the codes collected display
+        function updateCodeDisplay() {
+            const codesContainer = document.getElementById('codesCollected');
+            if (gameState.collectedCodes.length === 0) {
+                codesContainer.innerHTML = '<span style="color: #7f8c8d; font-style: italic;">Ningún código encontrado aún...</span>';
+            } else {
+                codesContainer.innerHTML = gameState.collectedCodes
+                    .map(code => `<span class="collected-code">${code}</span>`)
+                    .join('');
+            }
+        }
+
+        // Update briefcase code slots
+        function updateBriefcaseDisplay() {
+            gameState.collectedCodes.forEach((code, index) => {
+                const slot = document.getElementById(`code${index + 1}`);
+                if (slot) {
+                    slot.textContent = code;
+                    slot.classList.add('filled');
+                }
+            });
+        }
+
+        // Mission 2 Data and Functions
+        const mission2Data = {
+            rounds: [
+                {
+                    clue: "Primero voy a nadar, luego voy a comer, y finalmente voy a dormir",
+                    sequence: ["swimming", "pizza", "bed"],
+                    length: 3
+                },
+                {
+                    clue: "Voy a jugar, después voy a leer, luego voy a visitar el museo, y al final voy a descansar",
+                    sequence: ["soccer", "library", "museum", "bed"],
+                    length: 4
+                },
+                {
+                    clue: "Primero voy a correr en la playa, luego voy a jugar videojuegos, después voy a volar, luego voy a comer pizza, y finalmente voy a dormir",
+                    sequence: ["beach", "videogame", "airplane", "pizza", "bed"],
+                    length: 5
+                }
+            ],
+            photos: [
+                { id: "swimming", emoji: "🏊", label: "Swimming Pool" },
+                { id: "pizza", emoji: "🍕", label: "Pizza" },
+                { id: "library", emoji: "📚", label: "Library" },
+                { id: "soccer", emoji: "⚽", label: "Soccer Ball" },
+                { id: "bed", emoji: "🛏️", label: "Bed" },
+                { id: "airplane", emoji: "✈️", label: "Airplane" },
+                { id: "beach", emoji: "🏖️", label: "Beach" },
+                { id: "videogame", emoji: "🎮", label: "Video Game" },
+                { id: "museum", emoji: "🏛️", label: "Museum" }
+            ]
+        };
+
+        let mission2State = {
+            currentRound: 0,
+            currentSequence: [],
+            attempts: 0,
+            totalAttempts: 0,
+            isProcessing: false,
+            hintUsed: false
+        };
+
+        function startMission2() {
+            // Reset mission state
+            mission2State = {
+                currentRound: 0,
+                currentSequence: [],
+                attempts: 0,
+                totalAttempts: 0,
+                isProcessing: false,
+                hintUsed: false
+            };
+            
+            // Show modal
+            document.getElementById('mission2Modal').classList.add('active');
+            
+            // Initialize first round
+            initializeRound();
+        }
+
+        function initializeRound() {
+            const round = mission2Data.rounds[mission2State.currentRound];
+            
+            // Update UI
+            document.getElementById('currentRound').textContent = mission2State.currentRound + 1;
+            document.getElementById('spanishClue').textContent = round.clue;
+            document.getElementById('attemptCount').textContent = mission2State.attempts;
+            
+            // Update progress bar
+            const progressPercentage = ((mission2State.currentRound + 1) / 3) * 100;
+            document.getElementById('roundProgressFill').style.width = progressPercentage + '%';
+            
+            // Reset sequence
+            mission2State.currentSequence = [];
+            mission2State.isProcessing = false;
+            
+            // Generate and shuffle photo grid
+            generatePhotoGrid();
+            updateSequenceIndicators();
+            
+            // Hide round complete
+            document.getElementById('roundComplete').style.display = 'none';
+            
+            // Reset hint button
+            document.getElementById('hintBtn').disabled = false;
+            mission2State.hintUsed = false;
+        }
+
+        function generatePhotoGrid() {
+            const gridContainer = document.getElementById('photoGrid');
+            gridContainer.innerHTML = '';
+            
+            // Shuffle photos for this round
+            const shuffledPhotos = [...mission2Data.photos].sort(() => Math.random() - 0.5);
+            
+            shuffledPhotos.forEach(photo => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.dataset.photoId = photo.id;
+                
+                photoItem.innerHTML = `
+                    <span class="photo-emoji">${photo.emoji}</span>
+                    <div class="photo-label">${photo.label}</div>
+                `;
+                
+                photoItem.addEventListener('click', () => selectPhoto(photo.id));
+                gridContainer.appendChild(photoItem);
+            });
+        }
+
+        function selectPhoto(photoId) {
+            if (mission2State.isProcessing) return;
+            
+            const round = mission2Data.rounds[mission2State.currentRound];
+            const expectedNext = round.sequence[mission2State.currentSequence.length];
+            
+            const photoItem = document.querySelector(`[data-photo-id="${photoId}"]`);
+            
+            if (photoId === expectedNext) {
+                // Correct selection
+                photoItem.classList.add('correct');
+                mission2State.currentSequence.push(photoId);
+                updateSequenceIndicators();
+                
+                // Check if round is complete
+                if (mission2State.currentSequence.length === round.sequence.length) {
+                    setTimeout(() => {
+                        completeRound();
+                    }, 1000);
+                }
+            } else {
+                // Wrong selection
+                mission2State.isProcessing = true;
+                mission2State.attempts++;
+                mission2State.totalAttempts++;
+                
+                // Flash all photos red
+                const allPhotos = document.querySelectorAll('.photo-item');
+                allPhotos.forEach(item => {
+                    item.classList.add('wrong');
+                });
+                
+                setTimeout(() => {
+                    // Remove wrong class and shuffle
+                    allPhotos.forEach(item => {
+                        item.classList.remove('wrong');
+                        item.classList.add('shuffle');
+                    });
+                    
+                    setTimeout(() => {
+                        // Reset and reshuffle
+                        mission2State.currentSequence = [];
+                        generatePhotoGrid();
+                        updateSequenceIndicators();
+                        document.getElementById('attemptCount').textContent = mission2State.attempts;
+                        mission2State.isProcessing = false;
+                    }, 800);
+                }, 600);
+            }
+        }
+
+        function updateSequenceIndicators() {
+            const round = mission2Data.rounds[mission2State.currentRound];
+            const container = document.getElementById('sequenceIndicators');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < round.sequence.length; i++) {
+                const indicator = document.createElement('div');
+                indicator.className = 'sequence-indicator';
+                
+                if (i < mission2State.currentSequence.length) {
+                    indicator.classList.add('completed');
+                    indicator.textContent = '✓';
+                } else if (i === mission2State.currentSequence.length) {
+                    indicator.classList.add('current');
+                    indicator.textContent = i + 1;
+                } else {
+                    indicator.textContent = i + 1;
+                }
+                
+                container.appendChild(indicator);
+            }
+        }
+
+        function completeRound() {
+            if (mission2State.currentRound === 2) {
+                // Mission complete!
+                completeMission2();
+            } else {
+                // Show round complete
+                document.getElementById('roundComplete').style.display = 'block';
+            }
+        }
+
+        function completeMission2() {
+            // Hide photo grid and controls
+            document.getElementById('photoGrid').style.display = 'none';
+            document.querySelector('.mission-controls').style.display = 'none';
+            document.getElementById('sequenceIndicators').parentElement.style.display = 'none';
+            
+            // Show code reveal
+            document.getElementById('totalAttempts').textContent = mission2State.totalAttempts;
+            document.getElementById('mission2CodeReveal').style.display = 'block';
+            
+            // Add code to game state
+            addCollectedCode('2024');
+            
+            // Mark mission as completed
+            gameState.missionStatus[2] = 'completed';
+            document.getElementById('mission2').classList.add('completed');
+            document.getElementById('mission2').querySelector('.lock-icon').textContent = '✅';
+            
+            // Unlock Mission 3
+            unlockMission(3);
+        }
+
+        // Mission 2 Event Listeners
+        document.getElementById('nextRoundBtn').addEventListener('click', function() {
+            mission2State.currentRound++;
+            mission2State.attempts = 0;
+            initializeRound();
+        });
+
+        document.getElementById('hintBtn').addEventListener('click', function() {
+            if (!mission2State.hintUsed) {
+                const round = mission2Data.rounds[mission2State.currentRound];
+                const nextPhotoId = round.sequence[mission2State.currentSequence.length];
+                
+                // Find and highlight the next correct photo
+                const nextPhoto = document.querySelector(`[data-photo-id="${nextPhotoId}"]`);
+                if (nextPhoto) {
+                    nextPhoto.style.border = '3px solid #f39c12';
+                    nextPhoto.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.8)';
+                    
+                    setTimeout(() => {
+                        nextPhoto.style.border = '3px solid transparent';
+                        nextPhoto.style.boxShadow = '';
+                    }, 3000);
+                }
+                
+                // Deduct time from main timer
+                gameState.timeRemaining -= 120; // 2 minutes
+                
+                // Disable hint button
+                this.disabled = true;
+                this.textContent = '💡 Hint Used';
+                mission2State.hintUsed = true;
+            }
+        });
+
+        document.getElementById('closeMission2').addEventListener('click', function() {
+            if (mission2State.currentSequence.length > 0) {
+                if (confirm('¿Estás seguro? Perderás tu progreso actual.')) {
+                    closeMission2();
+                }
+            } else {
+                closeMission2();
+            }
+        });
+
+        document.getElementById('returnToMain2').addEventListener('click', function() {
+            closeMission2();
+        });
+
+        function closeMission2() {
+            document.getElementById('mission2Modal').classList.remove('active');
+            
+            // Reset UI for next time
+            document.getElementById('photoGrid').style.display = 'grid';
+            document.querySelector('.mission-controls').style.display = 'flex';
+            document.getElementById('sequenceIndicators').parentElement.style.display = 'block';
+            document.getElementById('mission2CodeReveal').style.display = 'none';
+            document.getElementById('roundComplete').style.display = 'none';
+        }
+
+        // Mission 3 Data and Functions
+        const mission3Data = {
+            sentences: [
+                {
+                    target: ["Voy", "a", "nadar"],
+                    wordBank: ["nadar", "Voy", "a", "correr"],
+                    english: "I'm going to swim",
+                    template: "blank blank blank"
+                },
+                {
+                    target: ["Voy", "a", "comer", "pizza"],
+                    wordBank: ["pizza", "a", "Voy", "comer", "dormir"],
+                    english: "I'm going to eat pizza",
+                    template: "blank blank blank blank"
+                },
+                {
+                    target: ["Voy", "a", "jugar", "fútbol"],
+                    wordBank: ["jugar", "fútbol", "Voy", "a", "tenis"],
+                    english: "I'm going to play soccer",
+                    template: "blank blank blank blank"
+                },
+                {
+                    target: ["Voy", "a", "visitar", "Barcelona"],
+                    wordBank: ["Barcelona", "visitar", "a", "Voy", "Madrid"],
+                    english: "I'm going to visit Barcelona",
+                    template: "blank blank blank blank"
+                },
+                {
+                    target: ["Voy", "a", "descansar", "en", "casa"],
+                    wordBank: ["en", "Voy", "descansar", "casa", "a", "playa"],
+                    english: "I'm going to rest at home",
+                    template: "blank blank blank blank blank"
+                }
+            ],
+            codeLetters: ["B", "C", "N"]
+        };
+
+        let mission3State = {
+            currentSentence: 0,
+            currentWords: [],
+            wrongAttempts: 0,
+            hintUsed: false,
+            draggedElement: null,
+            touchDevice: false
+        };
+
+        function startMission3() {
+            // Reset mission state
+            mission3State = {
+                currentSentence: 0,
+                currentWords: [],
+                wrongAttempts: 0,
+                hintUsed: false,
+                draggedElement: null,
+                touchDevice: 'ontouchstart' in window
+            };
+            
+            // Show modal
+            document.getElementById('mission3Modal').classList.add('active');
+            
+            // Initialize first sentence
+            initializeSentence();
+        }
+
+        function initializeSentence() {
+            const sentence = mission3Data.sentences[mission3State.currentSentence];
+            
+            // Update progress
+            document.getElementById('currentSentence').textContent = mission3State.currentSentence + 1;
+            const progressPercentage = ((mission3State.currentSentence + 1) / 5) * 100;
+            document.getElementById('sentenceProgressFill').style.width = progressPercentage + '%';
+            
+            // Reset state
+            mission3State.currentWords = new Array(sentence.target.length).fill(null);
+            mission3State.wrongAttempts = 0;
+            mission3State.hintUsed = false;
+            
+            // Update UI
+            document.getElementById('wrongAttempts').textContent = mission3State.wrongAttempts;
+            document.getElementById('sentenceFeedback').textContent = '';
+            document.getElementById('englishHint').classList.remove('show');
+            document.getElementById('hintBtn3').disabled = false;
+            document.getElementById('hintBtn3').textContent = '💡 Translation';
+            
+            // Build sentence template
+            buildSentenceTemplate();
+            
+            // Create word bank
+            createWordBank();
+        }
+
+        function buildSentenceTemplate() {
+            const sentence = mission3Data.sentences[mission3State.currentSentence];
+            const template = document.getElementById('sentenceTemplate');
+            template.innerHTML = '';
+            
+            sentence.target.forEach((word, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'word-slot';
+                slot.dataset.index = index;
+                slot.textContent = '';
+                
+                // Add drag and drop event listeners
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('drop', handleDrop);
+                slot.addEventListener('click', handleSlotClick);
+                
+                template.appendChild(slot);
+            });
+        }
+
+        function createWordBank() {
+            const sentence = mission3Data.sentences[mission3State.currentSentence];
+            const wordTiles = document.getElementById('wordTiles');
+            wordTiles.innerHTML = '';
+            
+            // Shuffle word bank
+            const shuffledWords = [...sentence.wordBank].sort(() => Math.random() - 0.5);
+            
+            shuffledWords.forEach((word, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'word-tile';
+                tile.textContent = word;
+                tile.dataset.word = word;
+                tile.draggable = !mission3State.touchDevice;
+                
+                // Add event listeners
+                if (mission3State.touchDevice) {
+                    tile.addEventListener('click', handleTileClick);
+                } else {
+                    tile.addEventListener('dragstart', handleDragStart);
+                    tile.addEventListener('dragend', handleDragEnd);
+                }
+                
+                wordTiles.appendChild(tile);
+            });
+        }
+
+        let selectedTile = null;
+
+        function handleTileClick(e) {
+            if (mission3State.touchDevice) {
+                const tile = e.target;
+                
+                if (selectedTile) {
+                    selectedTile.style.border = '2px solid transparent';
+                }
+                
+                selectedTile = tile;
+                tile.style.border = '2px solid #3498db';
+            }
+        }
+
+        function handleSlotClick(e) {
+            if (mission3State.touchDevice && selectedTile) {
+                const slot = e.target;
+                const word = selectedTile.dataset.word;
+                const index = parseInt(slot.dataset.index);
+                
+                // Place word in slot
+                mission3State.currentWords[index] = word;
+                slot.textContent = word;
+                slot.classList.add('filled');
+                
+                // Mark tile as used
+                selectedTile.classList.add('used');
+                selectedTile.style.border = '2px solid transparent';
+                selectedTile = null;
+                
+                updateCheckButton();
+            }
+        }
+
+        function handleDragStart(e) {
+            mission3State.draggedElement = e.target;
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            mission3State.draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            if (mission3State.draggedElement) {
+                const slot = e.target;
+                const word = mission3State.draggedElement.dataset.word;
+                const index = parseInt(slot.dataset.index);
+                
+                // Place word in slot
+                mission3State.currentWords[index] = word;
+                slot.textContent = word;
+                slot.classList.add('filled');
+                
+                // Mark tile as used
+                mission3State.draggedElement.classList.add('used');
+                
+                updateCheckButton();
+            }
+        }
+
+        function updateCheckButton() {
+            const hasWords = mission3State.currentWords.some(word => word !== null);
+            document.getElementById('checkSentenceBtn').disabled = !hasWords;
+        }
+
+        function checkSentence() {
+            const sentence = mission3Data.sentences[mission3State.currentSentence];
+            const feedback = document.getElementById('sentenceFeedback');
+            
+            // Check if sentence is correct
+            const isCorrect = sentence.target.every((word, index) => 
+                mission3State.currentWords[index] === word
+            );
+            
+            if (isCorrect) {
+                // Correct sentence
+                feedback.textContent = '✓ ¡Correcto!';
+                feedback.className = 'sentence-feedback correct';
+                
+                // Reveal code letter
+                revealCodeLetter();
+                
+                setTimeout(() => {
+                    mission3State.currentSentence++;
+                    
+                    if (mission3State.currentSentence >= 5) {
+                        completeMission3();
+                    } else {
+                        initializeSentence();
+                    }
+                }, 2000);
+                
+            } else {
+                // Wrong sentence
+                mission3State.wrongAttempts++;
+                document.getElementById('wrongAttempts').textContent = mission3State.wrongAttempts;
+                
+                feedback.textContent = '✗ ¡Incorrecto! Try again';
+                feedback.className = 'sentence-feedback incorrect';
+                
+                // Highlight first word if 2 wrong attempts
+                if (mission3State.wrongAttempts >= 2) {
+                    highlightFirstWord();
+                }
+                
+                // Reset current attempt
+                setTimeout(() => {
+                    resetCurrentSentence();
+                }, 1500);
+            }
+        }
+
+        function revealCodeLetter() {
+            const letterIndex = mission3State.currentSentence;
+            if (letterIndex < 3) {
+                const letterElement = document.getElementById(`codeLetter${letterIndex + 1}`);
+                letterElement.textContent = mission3Data.codeLetters[letterIndex];
+                letterElement.classList.add('revealed');
+            }
+        }
+
+        function highlightFirstWord() {
+            const sentence = mission3Data.sentences[mission3State.currentSentence];
+            const firstWord = sentence.target[0];
+            
+            // Find and highlight the first word tile
+            const tiles = document.querySelectorAll('.word-tile');
+            tiles.forEach(tile => {
+                if (tile.dataset.word === firstWord && !tile.classList.contains('used')) {
+                    tile.style.background = 'linear-gradient(145deg, #58d68d, #27ae60)';
+                    tile.style.color = 'white';
+                    
+                    setTimeout(() => {
+                        tile.style.background = '';
+                        tile.style.color = '';
+                    }, 3000);
+                }
+            });
+        }
+
+        function resetCurrentSentence() {
+            // Clear current words
+            mission3State.currentWords = new Array(mission3Data.sentences[mission3State.currentSentence].target.length).fill(null);
+            
+            // Reset slots
+            const slots = document.querySelectorAll('.word-slot');
+            slots.forEach(slot => {
+                slot.textContent = '';
+                slot.classList.remove('filled');
+            });
+            
+            // Reset tiles
+            const tiles = document.querySelectorAll('.word-tile');
+            tiles.forEach(tile => {
+                tile.classList.remove('used');
+                tile.style.border = '2px solid transparent';
+            });
+            
+            selectedTile = null;
+            document.getElementById('sentenceFeedback').textContent = '';
+            updateCheckButton();
+        }
+
+        function completeMission3() {
+            // Hide construction zone and controls
+            document.querySelector('.construction-zone').style.display = 'none';
+            document.querySelector('.word-bank').style.display = 'none';
+            document.querySelector('.mission3-controls').style.display = 'none';
+            
+            // Show code reveal
+            document.getElementById('mission3CodeReveal').style.display = 'block';
+            
+            // Add code to game state
+            addCollectedCode('BCN');
+            
+            // Mark mission as completed
+            gameState.missionStatus[3] = 'completed';
+            document.getElementById('mission3').classList.add('completed');
+            document.getElementById('mission3').querySelector('.lock-icon').textContent = '✅';
+            
+            // Unlock Mission 4
+            unlockMission(4);
+        }
+
+        // Mission 3 Event Listeners
+        document.getElementById('checkSentenceBtn').addEventListener('click', checkSentence);
+
+        document.getElementById('hintBtn3').addEventListener('click', function() {
+            if (!mission3State.hintUsed) {
+                const sentence = mission3Data.sentences[mission3State.currentSentence];
+                const hintElement = document.getElementById('englishHint');
+                
+                hintElement.textContent = `English: "${sentence.english}"`;
+                hintElement.classList.add('show');
+                
+                // Disable hint button
+                this.disabled = true;
+                this.textContent = '💡 Hint Used';
+                mission3State.hintUsed = true;
+            }
+        });
+
+        document.getElementById('closeMission3').addEventListener('click', function() {
+            if (mission3State.currentSentence > 0) {
+                if (confirm('¿Estás seguro? Perderás tu progreso actual.')) {
+                    closeMission3();
+                }
+            } else {
+                closeMission3();
+            }
+        });
+
+        document.getElementById('returnToMain3').addEventListener('click', function() {
+            closeMission3();
+        });
+
+        function closeMission3() {
+            document.getElementById('mission3Modal').classList.remove('active');
+            
+            // Reset UI for next time
+            document.querySelector('.construction-zone').style.display = 'block';
+            document.querySelector('.word-bank').style.display = 'block';
+            document.querySelector('.mission3-controls').style.display = 'flex';
+            document.getElementById('mission3CodeReveal').style.display = 'none';
+        }
+
+        // Example functions for testing (remove in production)
+        window.testUnlockMission = unlockMission;
+        window.testAddCode = addCollectedCode;
+        window.gameState = gameState;
+
+        // Log initial state
+        console.log('Spanish Escape Room initialized!');
+        console.log('Initial game state:', gameState);
+        console.log('Available test functions: testUnlockMission(number), testAddCode(code)');
+        console.log('Example: testUnlockMission(2) or testAddCode("HOLA")');
+
+        // Mission 4 Data and Functions
+        const mission4Data = {
+            rounds: [
+                {
+                    phrase: "Voy a volar a Dubai",
+                    wordBank: ["a", "Dubai", "volar", "Voy", "a", "nadar"],
+                    target: ["Voy", "a", "volar", "a", "Dubai"]
+                },
+                {
+                    phrase: "Mañana voy a nadar y comer helado",
+                    wordBank: ["helado", "y", "Mañana", "comer", "nadar", "voy", "a", "jugar"],
+                    target: ["Mañana", "voy", "a", "nadar", "y", "comer", "helado"]
+                },
+                {
+                    phrase: "En verano voy a visitar España y voy a descansar",
+                    wordBank: ["España", "voy", "y", "En", "a", "visitar", "descansar", "verano", "a", "voy", "invierno"],
+                    target: ["En", "verano", "voy", "a", "visitar", "España", "y", "voy", "a", "descansar"]
+                }
+            ]
+        };
+
+        let mission4State = {
+            currentRound: 0,
+            currentPhase: 'start', // 'start', 'memorizing', 'recreation'
+            builtSentence: [],
+            roundAttempts: 0,
+            airplanesEarned: 0,
+            readyTimer: null,
+            memorizeStartTime: null,
+            peekUsed: false
+        };
+
+        function startMission4() {
+            // Reset mission state
+            mission4State = {
+                currentRound: 0,
+                currentPhase: 'start',
+                builtSentence: [],
+                roundAttempts: 0,
+                airplanesEarned: 0,
+                readyTimer: null,
+                memorizeStartTime: null,
+                peekUsed: false
+            };
+            
+            // Show modal
+            document.getElementById('mission4Modal').classList.add('active');
+            
+            // Initialize first round
+            initializeRound4();
+        }
+
+        function initializeRound4() {
+            const round = mission4Data.rounds[mission4State.currentRound];
+            
+            // Update round display
+            document.getElementById('currentRound4').textContent = mission4State.currentRound + 1;
+            
+            // Reset round state
+            mission4State.currentPhase = 'start';
+            mission4State.builtSentence = [];
+            mission4State.roundAttempts = 0;
+            mission4State.peekUsed = false;
+            
+            // Update UI
+            document.getElementById('roundAttempts').textContent = mission4State.roundAttempts;
+            document.getElementById('roundFeedback').textContent = '';
+            
+            // Show memory phase, hide others
+            document.getElementById('memoryPhase').style.display = 'block';
+            document.getElementById('recreationPhase').classList.remove('active');
+            document.getElementById('roundComplete4').classList.remove('show');
+            
+            // Reset phrase display
+            document.getElementById('phraseDisplay').textContent = '';
+            document.getElementById('phraseDisplay').classList.remove('fade-out');
+            
+            // Reset buttons
+            document.getElementById('startRoundBtn4').style.display = 'inline-block';
+            document.getElementById('readyBtn4').style.display = 'none';
+            document.getElementById('memoryInstructions').textContent = 'Click "Start Round" to begin memorizing the phrase!';
+        }
+
+        function startMemorization() {
+            const round = mission4Data.rounds[mission4State.currentRound];
+            
+            mission4State.currentPhase = 'memorizing';
+            mission4State.memorizeStartTime = Date.now();
+            
+            // Show phrase
+            document.getElementById('phraseDisplay').textContent = round.phrase;
+            document.getElementById('memoryInstructions').textContent = 'Study this phrase carefully. Click "I\'m ready!" when you\'ve memorized it.';
+            
+            // Hide start button, prepare ready button
+            document.getElementById('startRoundBtn4').style.display = 'none';
+            
+            // Enable ready button after 3 seconds
+            mission4State.readyTimer = setTimeout(() => {
+                document.getElementById('readyBtn4').style.display = 'inline-block';
+                document.getElementById('readyBtn4').disabled = false;
+            }, 3000);
+        }
+
+        function startRecreation() {
+            mission4State.currentPhase = 'recreation';
+            
+            // Clear timer
+            if (mission4State.readyTimer) {
+                clearTimeout(mission4State.readyTimer);
+            }
+            
+            // Fade out phrase
+            document.getElementById('phraseDisplay').classList.add('fade-out');
+            
+            setTimeout(() => {
+                // Hide memory phase, show recreation phase
+                document.getElementById('memoryPhase').style.display = 'none';
+                document.getElementById('recreationPhase').classList.add('active');
+                
+                // Initialize recreation interface
+                setupRecreationPhase();
+            }, 500);
+        }
+
+        function setupRecreationPhase() {
+            const round = mission4Data.rounds[mission4State.currentRound];
+            
+            // Reset built sentence
+            mission4State.builtSentence = [];
+            updateBuiltSentence();
+            
+            // Create word bank
+            createMemoryWordBank();
+            
+            // Reset peek button
+            document.getElementById('peekBtn4').disabled = false;
+            document.getElementById('peekBtn4').textContent = '👁️ Peek (+1 attempt)';
+        }
+
+        function createMemoryWordBank() {
+            const round = mission4Data.rounds[mission4State.currentRound];
+            const container = document.getElementById('memoryWordTiles');
+            container.innerHTML = '';
+            
+            // Shuffle word bank
+            const shuffledWords = [...round.wordBank].sort(() => Math.random() - 0.5);
+            
+            shuffledWords.forEach(word => {
+                const tile = document.createElement('div');
+                tile.className = 'memory-word-tile';
+                tile.textContent = word;
+                tile.dataset.word = word;
+                tile.addEventListener('click', () => selectMemoryWord(word, tile));
+                container.appendChild(tile);
+            });
+        }
+
+        function selectMemoryWord(word, tileElement) {
+            // Add word to built sentence
+            mission4State.builtSentence.push(word);
+            
+            // Mark tile as used
+            tileElement.classList.add('used');
+            
+            // Update display
+            updateBuiltSentence();
+            updateCheck4Button();
+        }
+
+        function updateBuiltSentence() {
+            const container = document.getElementById('builtSentence');
+            
+            if (mission4State.builtSentence.length === 0) {
+                container.innerHTML = 'Click words below to build the sentence...';
+                container.style.color = '#bdc3c7';
+            } else {
+                container.innerHTML = '';
+                container.style.color = 'white';
+                
+                mission4State.builtSentence.forEach((word, index) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'selected-word';
+                    wordSpan.textContent = word;
+                    wordSpan.addEventListener('click', () => removeWordFromSentence(index));
+                    container.appendChild(wordSpan);
+                });
+            }
+        }
+
+        function removeWordFromSentence(index) {
+            const removedWord = mission4State.builtSentence[index];
+            
+            // Remove from built sentence
+            mission4State.builtSentence.splice(index, 1);
+            
+            // Re-enable the tile
+            const tiles = document.querySelectorAll('.memory-word-tile');
+            tiles.forEach(tile => {
+                if (tile.dataset.word === removedWord && tile.classList.contains('used')) {
+                    tile.classList.remove('used');
+                    return;
+                }
+            });
+            
+            // Update display
+            updateBuiltSentence();
+            updateCheck4Button();
+        }
+
+        function updateCheck4Button() {
+            const hasWords = mission4State.builtSentence.length > 0;
+            document.getElementById('check4Btn').disabled = !hasWords;
+        }
+
+        function resetBuiltSentence() {
+            // Clear built sentence
+            mission4State.builtSentence = [];
+            
+            // Re-enable all tiles
+            const tiles = document.querySelectorAll('.memory-word-tile');
+            tiles.forEach(tile => {
+                tile.classList.remove('used');
+            });
+            
+            // Update display
+            updateBuiltSentence();
+            updateCheck4Button();
+        }
+
+        function checkMemorySentence() {
+            const round = mission4Data.rounds[mission4State.currentRound];
+            const feedback = document.getElementById('roundFeedback');
+            
+            // Check if sentence matches target
+            const isCorrect = round.target.length === mission4State.builtSentence.length &&
+                             round.target.every((word, index) => word === mission4State.builtSentence[index]);
+            
+            if (isCorrect) {
+                // Correct answer
+                feedback.textContent = '✈️ ¡Perfecto! Round complete!';
+                feedback.className = 'round-feedback correct';
+                
+                // Earn airplane
+                earnAirplane();
+                
+                setTimeout(() => {
+                    if (mission4State.currentRound >= 2) {
+                        // Mission complete
+                        completeMission4();
+                    } else {
+                        // Show round complete
+                        showRoundComplete();
+                    }
+                }, 2000);
+                
+            } else {
+                // Wrong answer
+                mission4State.roundAttempts++;
+                document.getElementById('roundAttempts').textContent = mission4State.roundAttempts;
+                
+                feedback.textContent = '✗ Not quite right. Try again!';
+                feedback.className = 'round-feedback incorrect';
+                
+                if (mission4State.roundAttempts >= 3) {
+                    // Too many attempts, restart mission
+                    feedback.textContent = '❌ Too many attempts! Restarting mission...';
+                    setTimeout(() => {
+                        restartMission4();
+                    }, 2000);
+                } else {
+                    // Reset and try again
+                    setTimeout(() => {
+                        resetBuiltSentence();
+                        feedback.textContent = '';
+                    }, 2000);
+                }
+            }
+        }
+
+        function earnAirplane() {
+            mission4State.airplanesEarned++;
+            const airplane = document.getElementById(`airplane${mission4State.airplanesEarned}`);
+            if (airplane) {
+                airplane.classList.add('earned');
+            }
+        }
+
+        function showRoundComplete() {
+            document.getElementById('recreationPhase').classList.remove('active');
+            document.getElementById('roundComplete4').classList.add('show');
+        }
+
+        function nextRound4() {
+            mission4State.currentRound++;
+            document.getElementById('roundComplete4').classList.remove('show');
+            initializeRound4();
+        }
+
+        function completeMission4() {
+            // Hide recreation phase
+            document.getElementById('recreationPhase').classList.remove('active');
+            
+            // Show code reveal
+            document.getElementById('mission4CodeReveal').style.display = 'block';
+            
+            // Add code to game state (using airplane emoji as the code)
+            addCollectedCode('✈️');
+            
+            // Mark mission as completed
+            gameState.missionStatus[4] = 'completed';
+            document.getElementById('mission4').classList.add('completed');
+            document.getElementById('mission4').querySelector('.lock-icon').textContent = '✅';
+        }
+
+        function restartMission4() {
+            // Reset all airplanes
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`airplane${i}`).classList.remove('earned');
+            }
+            
+            // Restart from round 1
+            mission4State.currentRound = 0;
+            mission4State.airplanesEarned = 0;
+            initializeRound4();
+        }
+
+        function peekAtPhrase() {
+            const round = mission4Data.rounds[mission4State.currentRound];
+            
+            if (!mission4State.peekUsed) {
+                // Show phrase temporarily
+                const phraseDisplay = document.getElementById('phraseDisplay');
+                phraseDisplay.textContent = round.phrase;
+                phraseDisplay.style.display = 'block';
+                phraseDisplay.classList.remove('fade-out');
+                
+                // Add attempt
+                mission4State.roundAttempts++;
+                document.getElementById('roundAttempts').textContent = mission4State.roundAttempts;
+                
+                // Disable peek button
+                document.getElementById('peekBtn4').disabled = true;
+                document.getElementById('peekBtn4').textContent = '👁️ Peek Used';
+                mission4State.peekUsed = true;
+                
+                // Hide phrase after 3 seconds
+                setTimeout(() => {
+                    phraseDisplay.classList.add('fade-out');
+                    setTimeout(() => {
+                        phraseDisplay.style.display = 'none';
+                    }, 500);
+                }, 3000);
+            }
+        }
+
+        // Mission 4 Event Listeners
+        document.getElementById('startRoundBtn4').addEventListener('click', startMemorization);
+        document.getElementById('readyBtn4').addEventListener('click', startRecreation);
+        document.getElementById('check4Btn').addEventListener('click', checkMemorySentence);
+        document.getElementById('reset4Btn').addEventListener('click', resetBuiltSentence);
+        document.getElementById('peekBtn4').addEventListener('click', peekAtPhrase);
+        document.getElementById('nextRound4Btn').addEventListener('click', nextRound4);
+
+        document.getElementById('closeMission4').addEventListener('click', function() {
+            if (mission4State.currentPhase !== 'start') {
+                if (confirm('¿Estás seguro? Perderás tu progreso actual.')) {
+                    closeMission4();
+                }
+            } else {
+                closeMission4();
+            }
+        });
+
+        document.getElementById('returnToMain4').addEventListener('click', function() {
+            closeMission4();
+        });
+
+        function closeMission4() {
+            // Clear any timers
+            if (mission4State.readyTimer) {
+                clearTimeout(mission4State.readyTimer);
+            }
+            
+            document.getElementById('mission4Modal').classList.remove('active');
+            
+            // Reset UI for next time
+            document.getElementById('memoryPhase').style.display = 'block';
+            document.getElementById('recreationPhase').classList.remove('active');
+            document.getElementById('roundComplete4').classList.remove('show');
+            document.getElementById('mission4CodeReveal').style.display = 'none';
+        }
+
+        // Function to unlock a mission
+        function unlockMission(missionNumber) {
+            const missionElement = document.getElementById(`mission${missionNumber}`);
+            if (missionElement) {
+                missionElement.classList.remove('locked');
+                missionElement.querySelector('.lock-icon').textContent = '🔓';
+                gameState.missionStatus[missionNumber] = 'unlocked';
+                console.log(`Mission ${missionNumber} unlocked!`);
+            }
+        }
+
+        // Enhanced timer function to handle game over
+        function updateTimer() {
+            const minutes = Math.floor(gameState.timeRemaining / 60);
+            const seconds = gameState.timeRemaining % 60;
+            const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = `Time to Flight: ${formattedTime}`;
+            
+            // Color changes based on time remaining
+            timerElement.classList.remove('warning', 'critical');
+            if (gameState.timeRemaining <= 120) { // 2 minutes
+                timerElement.classList.add('critical');
+            } else if (gameState.timeRemaining <= 300) { // 5 minutes
+                timerElement.classList.add('warning');
+            }
+            
+            if (gameState.timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                timerElement.textContent = 'Time to Flight: 00:00';
+                showGameOver();
+                return;
+            }
+            
+            gameState.timeRemaining--;
+        }
+
+        // Activate briefcase when all missions complete
+        function activateBriefcase() {
+            const briefcase = document.querySelector('.briefcase-container');
+            briefcase.classList.add('all-complete');
+            briefcase.style.cursor = 'pointer';
+            
+            // Add click handler
+            briefcase.addEventListener('click', openFinalCodeEntry);
+            
+            // Show notification
+            setTimeout(() => {
+                alert('🎉 ¡All missions complete! Click the briefcase to enter your escape codes!');
+            }, 1000);
+        }
+
+        // Open final code entry modal
+        function openFinalCodeEntry() {
+            // Update hint with collected codes
+            const hint = gameState.collectedCodes.join(', ');
+            document.getElementById('finalCodesHint').textContent = hint;
+            
+            // Clear input fields
+            document.querySelectorAll('.code-input-field').forEach(field => {
+                field.value = '';
+                field.classList.remove('correct', 'incorrect');
+            });
+            
+            // Reset feedback
+            document.getElementById('finalFeedback').textContent = '';
+            document.getElementById('unlockBtn').disabled = true;
+            
+            // Show modal
+            document.getElementById('finalCodeModal').classList.add('active');
+            
+            // Focus first input
+            document.getElementById('finalCode1').focus();
+        }
+
+        // Monitor input fields for completion
+        function setupFinalCodeInputs() {
+            const inputs = document.querySelectorAll('.code-input-field');
+            const unlockBtn = document.getElementById('unlockBtn');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Convert to uppercase for consistency
+                    this.value = this.value.toUpperCase();
+                    
+                    // Check if all fields are filled
+                    const allFilled = Array.from(inputs).every(field => field.value.trim() !== '');
+                    unlockBtn.disabled = !allFilled;
+                    
+                    // Clear previous styling
+                    this.classList.remove('correct', 'incorrect');
+                });
+                
+                // Enter key moves to next field or submits
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const currentIndex = Array.from(inputs).indexOf(this);
+                        if (currentIndex < inputs.length - 1) {
+                            inputs[currentIndex + 1].focus();
+                        } else if (!unlockBtn.disabled) {
+                            validateFinalCodes();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Validate final codes
+        function validateFinalCodes() {
+            const correctCodes = ['VOLAR', '2024', 'BCN', '✈️'];
+            const enteredCodes = [
+                document.getElementById('finalCode1').value.trim(),
+                document.getElementById('finalCode2').value.trim(),
+                document.getElementById('finalCode3').value.trim(),
+                document.getElementById('finalCode4').value.trim()
+            ];
+            
+            const feedback = document.getElementById('finalFeedback');
+            const inputs = document.querySelectorAll('.code-input-field');
+            
+            // Check each code
+            let allCorrect = true;
+            enteredCodes.forEach((code, index) => {
+                const input = inputs[index];
+                if (code === correctCodes[index]) {
+                    input.classList.add('correct');
+                    input.classList.remove('incorrect');
+                } else {
+                    input.classList.add('incorrect');
+                    input.classList.remove('correct');
+                    allCorrect = false;
+                }
+            });
+            
+            if (allCorrect) {
+                // Success!
+                feedback.textContent = '✅ ¡Códigos correctos! Opening briefcase...';
+                feedback.classList.remove('error');
+                feedback.style.color = '#27ae60';
+                
+                setTimeout(() => {
+                    document.getElementById('finalCodeModal').classList.remove('active');
+                    showSuccessScreen();
+                }, 2000);
+                
+            } else {
+                // Incorrect codes
+                feedback.textContent = '❌ ¡Incorrecto! Check your codes!';
+                feedback.classList.add('error');
+                
+                // Deduct time
+                gameState.timeRemaining -= 120; // 2 minutes penalty
+                
+                // Shake animation
+                const modal = document.querySelector('.final-content');
+                modal.style.animation = 'shake 0.6s ease';
+                setTimeout(() => {
+                    modal.style.animation = '';
+                }, 600);
+            }
+        }
+
+        // Show success screen
+        function showSuccessScreen() {
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            const minutes = Math.floor(gameState.timeRemaining / 60);
+            const seconds = gameState.timeRemaining % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update success screen
+            document.getElementById('timeRemaining').textContent = timeString;
+            document.getElementById('boardingTimeSaved').textContent = timeString;
+            document.getElementById('boardingDate').textContent = new Date().toLocaleDateString();
+            
+            // Show modal
+            document.getElementById('successModal').classList.add('active');
+            
+            // Start confetti
+            startConfetti();
+            
+            // Stop confetti after 5 seconds
+            setTimeout(stopConfetti, 5000);
+        }
+
+        // Show game over screen
+        function showGameOver() {
+            const completedCount = Object.values(gameState.missionStatus).filter(status => status === 'completed').length;
+            document.getElementById('completedMissions').textContent = completedCount;
+            
+            // Show collected codes
+            const codesContainer = document.getElementById('gameOverCodes');
+            const allCodes = ['VOLAR', '2024', 'BCN', '✈️'];
+            codesContainer.innerHTML = '';
+            
+            allCodes.forEach((code, index) => {
+                const badge = document.createElement('div');
+                badge.className = 'code-badge';
+                
+                if (gameState.collectedCodes.includes(code)) {
+                    badge.textContent = code;
+                } else {
+                    badge.textContent = '???';
+                    badge.classList.add('missing');
+                }
+                
+                codesContainer.appendChild(badge);
+            });
+            
+            // Show modal
+            document.getElementById('gameOverModal').classList.add('active');
+        }
+
+        // Confetti animation
+        function startConfetti() {
+            const colors = ['#f39c12', '#e74c3c', '#3498db', '#27ae60', '#9b59b6', '#ff6b35'];
+            const confettiContainer = document.createElement('div');
+            confettiContainer.className = 'confetti';
+            confettiContainer.id = 'confettiContainer';
+            document.body.appendChild(confettiContainer);
+            
+            function createConfettiPiece() {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDelay = Math.random() * 2 + 's';
+                piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                confettiContainer.appendChild(piece);
+                
+                // Remove piece after animation
+                setTimeout(() => {
+                    if (piece.parentNode) {
+                        piece.parentNode.removeChild(piece);
+                    }
+                }, 5000);
+            }
+            
+            // Create confetti pieces
+            const interval = setInterval(() => {
+                for (let i = 0; i < 3; i++) {
+                    createConfettiPiece();
+                }
+            }, 100);
+            
+            // Store interval for cleanup
+            window.confettiInterval = interval;
+        }
+
+        function stopConfetti() {
+            if (window.confettiInterval) {
+                clearInterval(window.confettiInterval);
+            }
+            
+            const container = document.getElementById('confettiContainer');
+            if (container) {
+                setTimeout(() => {
+                    if (container.parentNode) {
+                        container.parentNode.removeChild(container);
+                    }
+                }, 3000);
+            }
+        }
+
+        // Certificate generation
+        function generateCertificate() {
+            const studentName = document.getElementById('studentNameInput').value.trim();
+            if (!studentName) {
+                alert('Please enter your name first!');
+                return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 600;
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+            gradient.addColorStop(0, '#3498db');
+            gradient.addColorStop(1, '#2c3e50');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 800, 600);
+            
+            // Certificate content
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 36px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏆 SPANISH ESCAPE ROOM CHAMPION 🏆', 400, 80);
+            
+            ctx.font = '24px Arial';
+            ctx.fillText('This certifies that', 400, 140);
+            
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = '#f39c12';
+            ctx.fillText(studentName, 400, 190);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText('Successfully completed the Spanish Escape Room', 400, 240);
+            
+            const minutes = Math.floor(gameState.timeRemaining / 60);
+            const seconds = gameState.timeRemaining % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            ctx.fillText(`with ${timeString} remaining`, 400, 270);
+            
+            // Codes section
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText('Codes Mastered:', 400, 320);
+            
+            ctx.font = '16px Arial';
+            const codes = gameState.collectedCodes;
+            ctx.fillText(`Mission 1: ${codes[0] || '???'} • Mission 2: ${codes[1] || '???'} • Mission 3: ${codes[2] || '???'} • Mission 4: ${codes[3] || '???'}`, 400, 350);
+            
+            // Date
+            ctx.font = '16px Arial';
+            ctx.fillText(`Completed on: ${new Date().toLocaleDateString()}`, 400, 420);
+            
+            // Signature line
+            ctx.font = 'italic 14px Arial';
+            ctx.fillText('Spanish Escape Room Academy', 400, 500);
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `spanish-escape-room-certificate-${studentName.replace(/\s+/g, '-')}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // Leaderboard functions
+        function saveScore() {
+            const studentName = document.getElementById('studentNameInput').value.trim();
+            if (!studentName) {
+                alert('Please enter your name first!');
+                return;
+            }
+            
+            const score = {
+                name: studentName,
+                timeRemaining: gameState.timeRemaining,
+                date: new Date().toLocaleDateString(),
+                timestamp: Date.now()
+            };
+            
+            // Get existing scores
+            let scores = JSON.parse(localStorage.getItem('spanishEscapeRoomScores') || '[]');
+            
+            // Add new score
+            scores.push(score);
+            
+            // Sort by time remaining (descending)
+            scores.sort((a, b) => b.timeRemaining - a.timeRemaining);
+            
+            // Keep only top 10
+            scores = scores.slice(0, 10);
+            
+            // Save back to localStorage
+            localStorage.setItem('spanishEscapeRoomScores', JSON.stringify(scores));
+            
+            alert('Score saved to leaderboard!');
+            showLeaderboard();
+        }
+
+        function showLeaderboard() {
+            const scores = JSON.parse(localStorage.getItem('spanishEscapeRoomScores') || '[]');
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+            
+            if (scores.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 4;
+                cell.style.textAlign = 'center';
+                cell.style.fontStyle = 'italic';
+                cell.textContent = 'No scores yet. Be the first to complete the escape room!';
+                cell.style.color = '#bdc3c7';
+            } else {
+                scores.forEach((score, index) => {
+                    const row = tbody.insertRow();
+                    
+                    const rankCell = row.insertCell();
+                    rankCell.className = 'leaderboard-rank';
+                    rankCell.textContent = `#${index + 1}`;
+                    
+                    const nameCell = row.insertCell();
+                    nameCell.textContent = score.name;
+                    
+                    const timeCell = row.insertCell();
+                    const minutes = Math.floor(score.timeRemaining / 60);
+                    const seconds = score.timeRemaining % 60;
+                    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    timeCell.textContent = timeString;
+                    
+                    const dateCell = row.insertCell();
+                    dateCell.textContent = score.date;
+                });
+            }
+            
+            document.getElementById('leaderboardModal').classList.add('active');
+        }
+
+        // Reset game function
+        function resetGame() {
+            // Stop timers
+            clearInterval(timerInterval);
+            if (window.confettiInterval) {
+                clearInterval(window.confettiInterval);
+            }
+            
+            // Reset game state
+            gameState.timeRemaining = 30 * 60;
+            gameState.collectedCodes = [];
+            gameState.missionStatus = {
+                1: 'unlocked',
+                2: 'locked',
+                3: 'locked',
+                4: 'locked'
+            };
+            
+            // Reset mission doors
+            for (let i = 1; i <= 4; i++) {
+                const mission = document.getElementById(`mission${i}`);
+                mission.classList.remove('completed');
+                
+                if (i === 1) {
+                    mission.classList.remove('locked');
+                    mission.querySelector('.lock-icon').textContent = '🔓';
+                } else {
+                    mission.classList.add('locked');
+                    mission.querySelector('.lock-icon').textContent = '🔒';
+                }
+            }
+            
+            // Reset briefcase
+            const briefcase = document.querySelector('.briefcase-container');
+            briefcase.classList.remove('all-complete');
+            briefcase.style.cursor = '';
+            briefcase.removeEventListener('click', openFinalCodeEntry);
+            
+            // Reset code slots
+            for (let i = 1; i <= 4; i++) {
+                const slot = document.getElementById(`code${i}`);
+                slot.textContent = '____';
+                slot.classList.remove('filled');
+            }
+            
+            // Update displays
+            updateCodeDisplay();
+            
+            // Close all modals
+            document.querySelectorAll('.final-modal, .mission-modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            
+            // Remove confetti
+            const confettiContainer = document.getElementById('confettiContainer');
+            if (confettiContainer) {
+                confettiContainer.remove();
+            }
+            
+            // Restart timer
+            const timerInterval = setInterval(updateTimer, 1000);
+            window.timerInterval = timerInterval;
+        }
+
+        // Event Listeners for Final Sequence
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFinalCodeInputs();
+            
+            // Final code modal events
+            document.getElementById('unlockBtn').addEventListener('click', validateFinalCodes);
+            document.getElementById('closeFinalModal').addEventListener('click', function() {
+                document.getElementById('finalCodeModal').classList.remove('active');
+            });
+            
+            // Success screen events
+            document.getElementById('downloadCertBtn').addEventListener('click', generateCertificate);
+            document.getElementById('saveScoreBtn').addEventListener('click', saveScore);
+            document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+            
+            // Game over events
+            document.getElementById('tryAgainBtn').addEventListener('click', resetGame);
+            document.getElementById('viewLeaderboardBtn').addEventListener('click', showLeaderboard);
+            
+            // Leaderboard events
+            document.getElementById('closeLeaderboard').addEventListener('click', function() {
+                document.getElementById('leaderboardModal').classList.remove('active');
+            });
+            document.getElementById('playAgainFromLeaderboard').addEventListener('click', resetGame);
+        });
+
+        // Modify the original timer interval reference
+        window.timerInterval = timerInterval;
+    </script>
+</body>
+</html> 
